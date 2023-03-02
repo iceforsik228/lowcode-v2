@@ -97,6 +97,6 @@ func Login(c *gin.Context) {
 
 	// return jwt token
 	c.JSON(http.StatusOK, gin.H{
-		"user": tokenString,
+		"token": tokenString,
 	})
 }
