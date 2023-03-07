@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"lowcode-v2/initializers"
 	"lowcode-v2/models"
+	"lowcode-v2/utils"
 	"net/http"
 	"os"
 	"time"
@@ -80,10 +80,7 @@ func Login(c *gin.Context) {
 	}
 
 	// generate jwt
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": user.ID,
-		"exp": time.Now().Add(time.Minute * 30).Unix(),
-	})
+	token := utils.GenerateToken(user.ID, time.Hour)
 
 	// Sign and get the complete encoded token as a string using the secret
 	hmacSecret := os.Getenv("SECRET")
@@ -95,8 +92,41 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
 	// return jwt token
 	c.JSON(http.StatusOK, gin.H{
 		"token": tokenString,
+	})
+}
+
+func Logout(c *gin.Context) {
+	token := utils.GenerateToken(0, -time.Hour)
+
+	hmacSecret := os.Getenv("SECRET")
+	tokenString, err := token.SignedString([]byte(hmacSecret))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "success",
+	})
+}
+
+func Validate(c *gin.Context) {
+	user, exist := c.Get("user")
+	if !exist {
+		panic("yamaha > kawasaki")
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "I'm logged in!",
+		"user":    user,
 	})
 }

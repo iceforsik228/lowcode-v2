@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"lowcode-v2/controllers"
 	"lowcode-v2/initializers"
+	"lowcode-v2/middleware"
 )
 
 func init() {
@@ -18,6 +19,9 @@ func main() {
 
 	r.POST("/register", controllers.Register)
 	r.POST("/login", controllers.Login)
+	r.GET("/logout", controllers.Logout)
+
+	r.GET("/validate", middleware.RequireAuth, controllers.Validate)
 
 	if err := r.Run(); err != nil {
 		panic("Failed to start server on port 8080")
